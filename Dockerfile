@@ -1,11 +1,18 @@
-FROM debian:latest
-# WORKDIR /home/wharding/sagan-docker
+FROM debian:11-slim as builder
 RUN apt update && apt upgrade -y
-RUN apt install curl gnupg git -y
-RUN curl -X GET -L "https://github.com/maxmind/geoipupdate/releases/download/v4.9.0/geoipupdate_4.9.0_linux_amd64.deb" -o geoipupdate_4.9.0_linux_amd64.deb 
-RUN dpkg -i geoipupdate_4.9.0_linux_amd64.deb 
-RUN curl -SsL https://quadrantsec.github.io/ppa/debian/quadrantsec_key.gpg | apt-key add -
-RUN curl -SsL -o /etc/apt/sources.list.d/quadrantsec.list https://quadrantsec.github.io/ppa/debian/quadrantsec_file.list
+RUN apt install git autoconf automake build-essential libpcre3-dev libpcre3 libyaml-dev liblognorm-dev libfastjson-dev libestr-dev pkg-config zlib1g-dev -y
+RUN git clone https://github.com/quadrantsec/sagan.git
+RUN cd sagan/ && ./autogen.sh
+RUN cd sagan/ && ./configure
+RUN cd sagan/ && make
+RUN cd sagan/ && make install
+
+FROM debian:11-slim
 RUN apt update && apt upgrade -y
-RUN apt install meer sagan -y
-RUN rm -rf /usr/local/etc/sagan-rules/ && git clone https://github.com/quadrantsec/sagan-rules.git /usr/local/etc/sagan-rules/
+RUN apt install git curl -y
+RUN apt install libyaml-dev libpcre3-dev libpcre3 liblognorm-dev libfastjson-dev -y
+RUN mkdir -p /usr/local/etc/ && curl "https://raw.githubusercontent.com/quadrantsec/sagan/main/etc/sagan.yaml" -o /usr/local/etc/sagan.yaml
+RUN git clone https://github.com/quadrantsec/sagan-rules.git /usr/local/etc/sagan-rules/
+RUN mkdir -p /var/log/sagan/ && touch /var/log/sagan/sagan.log
+RUN mkdir -p /var/sagan/fifo && mkfifo /var/sagan/fifo/sagan.fifo
+COPY --from=builder /usr/local/bin/sagan /usr/local/bin/sagan

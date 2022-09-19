@@ -1,11 +1,11 @@
 FROM alpine:latest as builder
 RUN apk update && apk upgrade
-RUN apk add autoconf automake build-base yaml-dev pcre-dev liblognorm-dev libfastjson-dev zlib-dev
-RUN wget https://github.com/quadrantsec/sagan/archive/refs/tags/v,2,0.2.tar.gz -O sagan-v2.0.2.tar.gz && tar -xzvf sagan-v2.0.2.tar.gz
-RUN cd sagan-v-2-0.2/ && ./autogen.sh
-RUN cd sagan-v-2-0.2/ && ./configure
-RUN cd sagan-v-2-0.2/ && make
-RUN cd sagan-v-2-0.2/ && make install
+RUN apk add git autoconf automake build-base yaml-dev pcre-dev liblognorm-dev libfastjson-dev zlib-dev
+RUN git clone https://github.com/quadrantsec/sagan.git
+RUN cd sagan/ && ./autogen.sh
+RUN cd sagan/ && ./configure
+RUN cd sagan/ && make
+RUN cd sagan/ && make install
 
 FROM alpine:latest
 RUN apk update && apk upgrade
